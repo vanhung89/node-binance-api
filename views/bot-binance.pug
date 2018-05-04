@@ -1,0 +1,145 @@
+doctype html
+html
+	head
+	link(rel='stylesheet', href='/stylesheets/bootstrap.min.css')
+	link(rel='stylesheet', href='/stylesheets/bootstrap-table.min.css')
+	link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css')
+	script(src='/javascripts/bootstrap.min.js')
+	script(src='/javascripts/jquery-3.3.1.min.js')
+	script(src='/javascripts/script.js')
+	script(src='/javascripts/bootstrap-table.min.js')
+	title Binance exchange
+body
+	<div class="container">
+		<div class="row" style="display:block;">
+			<div class="col-md-9" style="max-width: 100%;">
+			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+				<ul class="navbar-nav">
+					<li class="nav-item"><a class="navbar-brand" href="/bot/bittrex">Bittrex</a></li>
+					<li class="nav-item"><a class="navbar-brand" href="/bot/binance">Binance</a></li>
+					<li class="nav-item"><a class="navbar-brand" href="/users/logout">Logout</a></li>
+				</ul>	
+			</nav>
+			h2 Open order
+			<table class="table table-list-search">
+				<thead>
+					<tr>
+						<th>Date</th>
+						<th>Pair</th>
+						<th>Type</th>
+						<th>Price</th>
+						<th>Current price</th>
+						<th>Stoploss price</th>
+						<th>Amount</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				- var time
+				tbody
+					each item in openOrders
+						tr
+						- time=new Date(item.time)
+						td=time.toLocaleString()
+						td=item.symbol
+						td=item.side
+						td=item.price
+						<td class="#{item.symbol}"></td>
+						td
+							if item.type == 'STOP_LOSS_LIMIT'
+								input(type='text' id='updateSl'+item.symbol value=item.stopPrice)
+							else
+								normal NORMAL_ORDER
+						td=item.origQty
+						input(type='hidden' id='amountUpdateSl'+item.symbol value=item.origQty)
+						<td><button onclick="cancelOrder('#{item.symbol}', '#{item.orderId}', 'binance')" class="btn btn-danger"> Cancel</button>
+							//<button onclick="updateOrder('#{item.symbol}', '#{item.orderId}', 'binance')"> Update</button>
+						</td>
+			</table>
+			h3 Buy normal
+				<div class="input-group mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Coin name</span>
+					</div>
+					<input type="text" class="form-control" placeholder="Coin name" aria-label="Coin name" aria-describedby="basic-addon2" id='normalBuyCoinName'>
+					<div class="input-group-prepend">
+						<span class="input-group-text">Quantity</span>
+					</div>
+					<input type="text" class="form-control" placeholder="Quantity" aria-label="Quantity" aria-describedby="basic-addon2" id='normalBuyQuantity'>
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-bitcoin"></i></span>
+					</div>
+					<input type="text" class="form-control" placeholder="Price" aria-label="Price" aria-describedby="basic-addon2" id='normalBuyPrice'>
+					<div class="input-group-append">
+						<button class="btn btn-outline-secondary" type="button" onclick="normalBuy('binance')">Buy</button>
+					</div>
+				</div>
+			h3 Buy latest price
+				<div class="input-group mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Coin</span>
+					</div>
+					<input type="text" class="form-control" placeholder="Coin name" aria-label="Coin name" aria-describedby="basic-addon2" id='hotBuyCoinName'>
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-bitcoin"></i></span>
+					</div>
+					<input type="text" class="form-control" placeholder="BTC Amount" aria-label="BTC Amount" aria-describedby="basic-addon2" id='hotBuyBtcAmount'>
+					<div class="input-group-append">
+						<button class="btn btn-outline-secondary" type="button" onclick="hotBuy('binance')">Buy</button>
+					</div>
+				</div>
+			h2 List coin
+			<table data-toggle="table" data-sort-name="amount" data-sort-order="desc">
+				<thead>
+					<tr>
+						<th data-field="pair" data-sortable="true"> Coin</th>
+						<th data-field="amount" data-sortable="true">Available</th>
+						<th>Locked</th>
+						<th>Trading</th>
+						<th>Price Buy/Sell</th>
+						<th>Amount</th>
+						<th>Stoploss</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				tbody
+					each item,index in balance
+						tr
+						td=index
+						td
+							<span onclick="bindAmount('#{item.available}','#{index}')">#{item.available}</span>
+						td=item.onOrder
+						<td>
+							<input type="radio" onclick="enableStoploss('#{index}')" name="#{index}tradecb" value="#{index}BTC"> BTC
+							<input type="radio" onclick="enableStoploss('#{index}')" name="#{index}tradecb" value="#{index}BTC"> ETH
+						</td>
+						<td>
+							<div class="input-group">
+								<div class="input-group-prepend">
+									<span class="input-group-text" id="basic-addon1"><i class="fa fa-bitcoin"></i></span>
+								</div>
+								<input type="text" class="form-control" aria-describedby="basic-addon1" name='#{index}buyPrice' id='#{index}buyPrice' value='#{item.buyPrice}'   style="max-width: 150px;">
+							</div>
+							
+						</td>
+						<td>
+							<div class="input-group">
+								<input type="text" class="form-control" name='#{index}SlAmount' id='#{index}SlAmount' disabled  style="max-width: 150px;">
+							</div>
+						</td>
+						<td>
+							<div class="input-group">
+								<input type="text" class="form-control" aria-describedby="basic-addon2" name='#{index}SlPercent' id='#{index}SlPercent' disabled  style="max-width: 100px;">
+								<div class="input-group-append">
+									<span class="input-group-text" id="basic-addon2">%</span>
+								</div>
+							</div>
+						</td>
+						td
+							<div class="btn-group" role="group" aria-label="Basic example">
+								<button type="button" class="btn btn-secondary" name="#{index}startAuto" id="#{index}startAuto" onclick="autoTrade('#{index}', 'binance')")>Trade</button>
+								<button type="button" class="btn btn-secondary" name="#{index}sellLimit" id="#{index}sellLimit" onclick="sellLimit('#{index}', 'binance')")>Sell</button>
+							</div>
+			</table>
+			</div>
+		</div>
+	</div>

@@ -1,0 +1,139 @@
+doctype html
+html
+	head
+	link(rel='stylesheet', href='/stylesheets/bootstrap.min.css')
+	link(rel='stylesheet', href='/stylesheets/bootstrap-table.min.css')
+	script(src='/javascripts/bootstrap.min.js')
+	script(src='/javascripts/jquery-3.3.1.min.js')
+	script(src='/javascripts/script.js')
+	script(src='/javascripts/bootstrap-table.min.js')
+	title Bittrex exchange
+body
+	<div class="container">
+		<div class="row" style="display:block;>
+			<div class="col-md-9" style="max-width: 100%">
+			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+				<ul class="navbar-nav">
+					<li class="nav-item"><a class="navbar-brand" href="/bot/bittrex">Bittrex</a></li>
+					<li class="nav-item"><a class="navbar-brand" href="/bot/binance">Binance</a></li>
+					<li class="nav-item"><a class="navbar-brand" href="/users/logout">Logout</a></li>
+				</ul>	
+			</nav>
+			h2 Open order
+			<table class="table table-list-search">
+				<thead>
+					<tr>
+						<th>Date</th>
+						<th>Pair</th>
+						<th>Type</th>
+						<th>Price</th>
+						<th>Current price</th>
+						<th>Stoploss price</th>
+						<th>Amount</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				- var time
+				tbody
+					each item,index in openOrders
+						tr
+						td=item.Opened
+						td=item.Exchange
+						td=item.OrderType
+						td=item.Limit
+						<td class="#{item.Exchange}"></td>
+						td
+							if item.OrderType == 'STOP_LOSS_LIMIT'
+								input(type='text' id='updateSl'+item.Exchange value=item.Limit)
+							else
+								normal NORMAL_ORDER
+						td=item.Quantity
+						input(type='hidden' id='amountUpdateSl'+item.Exchange value=item.Quantity)
+						<td><button onclick="cancelOrder('#{item.Exchange}', '#{item.OrderUuid}', 'bittrex')" class="btn btn-danger"> Cancel</button>
+							//<button onclick="updateOrder('#{item.Exchange}', '#{item.OrderUuid}', 'bittrex')"> Update</button>
+						</td>
+			</table>
+			h3 Buy normal
+				<div class="input-group mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Coin name</span>
+					</div>
+					<input type="text" class="form-control" placeholder="Coin name" aria-label="Coin name" aria-describedby="basic-addon2" id='normalBuyCoinName'>
+					<div class="input-group-prepend">
+						<span class="input-group-text">Quantity</span>
+					</div>
+					<input type="text" class="form-control" placeholder="Quantity" aria-label="Quantity" aria-describedby="basic-addon2" id='normalBuyQuantity'>
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-bitcoin"></i></span>
+					</div>
+					<input type="text" class="form-control" placeholder="Price" aria-label="Price" aria-describedby="basic-addon2" id='normalBuyPrice'>
+					<div class="input-group-append">
+						<button class="btn btn-outline-secondary" type="button" onclick="normalBuy('bittrex')">Buy</button>
+					</div>
+				</div>
+			h3 Buy latest price
+				<div class="input-group mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Coin</span>
+					</div>
+					<input type="text" class="form-control" placeholder="Coin name" aria-label="Coin name" aria-describedby="basic-addon2" id='hotBuyCoinName'>
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-bitcoin"></i></span>
+					</div>
+					<input type="text" class="form-control" placeholder="BTC Amount" aria-label="BTC Amount" aria-describedby="basic-addon2" id='hotBuyBtcAmount'>
+					<div class="input-group-append">
+						<button class="btn btn-outline-secondary" type="button" onclick="hotBuy('bittrex')">Buy</button>
+					</div>
+				</div>
+			h2 List coin
+			<table data-toggle="table" data-sort-name="amount" data-sort-order="desc">
+				<thead>
+					<tr>
+						<th data-field="pair" data-sortable="true"> Coin</th>
+						<th data-field="amount" data-sortable="true">Balance</th>
+						<th data-field="amount">Available</th>
+						<th>Trading</th>
+						<th>Price Buy/Sell</th>
+						<th>Amount</th>
+						<th>Stoploss</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				tbody
+					each item, index in balance
+						tr
+						td=item.Currency
+						td=item.Balance
+						td
+							<span onclick="bindAmount('#{item.Available}','#{item.Currency}')">#{item.Available}</span>
+						<td>
+							<input type="radio" onclick="enableStoploss('#{item.Currency}')" name="#{item.Currency}tradecb" value="BTC-#{item.Currency}"> BTC
+							<input type="radio" onclick="enableStoploss('#{item.Currency}')" name="#{item.Currency}tradecb" value="BTC-#{item.Currency}"> ETH
+						</td>
+						td
+							<div class="input-group">
+								<div class="input-group-prepend">
+									<span class="input-group-text" id="basic-addon1"><i class="fa fa-bitcoin"></i></span>
+								</div>
+								<input type="text" class="form-control" aria-describedby="basic-addon1" name='#{item.Currency}buyPrice' id='#{item.Currency}buyPrice' value='#{item.buyPrice}'   style="max-width: 150px;">
+							</div>
+						td
+							<div class="input-group">
+								<input type="text" class="form-control" name='#{item.Currency}SlAmount' id='#{item.Currency}SlAmount' disabled  style="max-width: 150px;">
+							</div>
+						td
+							<div class="input-group">
+								<input type="text" class="form-control" aria-describedby="basic-addon2" name='#{item.Currency}SlPercent' id='#{item.Currency}SlPercent' disabled  style="max-width: 100px;">
+								<div class="input-group-append">
+									<span class="input-group-text" id="basic-addon2">%</span>
+								</div>
+							</div>
+						td
+							<div class="btn-group" role="group" aria-label="Basic example">
+								<button type="button" class="btn btn-secondary" name="#{item.Currency}startAuto" id="#{item.Currency}startAuto" onclick="autoTrade('#{item.Currency}', 'bittrex')")>Trade</button>
+								<button type="button" class="btn btn-secondary" name="#{item.Currency}sellLimit" id="#{item.Currency}sellLimit" onclick="sellLimit('#{item.Currency}', 'bittrex')")>Sell</button>
+							</div>
+			</table>
+			</div>
+		</div>
+	</div>
